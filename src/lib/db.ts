@@ -6,10 +6,14 @@ import pg from "pg";
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient };
 
 const getPrismaClient = () => {
-  const url = process.env.DATABASE_URL || "file:./dev.db";
+  const isPostgres = process.env.DATABASE_URL?.startsWith("postgres:") || 
+                     process.env.DATABASE_URL?.startsWith("postgresql:") || 
+                     !!process.env.VERCEL;
+
+  const url = process.env.DATABASE_URL || (isPostgres ? "postgresql://localhost:5432/dummy" : "file:./dev.db");
   
   let adapter;
-  if (url.startsWith("postgres:") || url.startsWith("postgresql:")) {
+  if (isPostgres) {
     const pool = new pg.Pool({ connectionString: url });
     adapter = new PrismaPg(pool);
   } else {
