@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String     @id @default(cuid())
+  email     String     @unique
+  playlists Playlist[]
+  items     Item[]
+  accounts  Account[]
+  createdAt DateTime   @default(now())
+}
+
+model Account {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id])
+  platform     String    // "YOUTUBE", "NETFLIX", "INSTAGRAM"
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+}
+
+model Item {
+  id           String         @id @default(cuid())
+  userId       String
+  user         User           @relation(fields: [userId], references: [id])
+  source       String         // "YOUTUBE", "NETFLIX", "INSTAGRAM", "MANUAL"
+  externalId   String         // Video ID, Post Code, Netflix ID
+  title        String
+  description  String?
+  url          String
+  thumbnailUrl String?
+  platform     String?
+  contentType  String?
+  category     String?
+  favicon      String?
+  previewTitle String?
+  playlistId   String?
+  videoId      String?
+  channelName  String?
+  playlists    PlaylistItem[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model Playlist {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id])
+  name        String
+  description String?
+  items       PlaylistItem[]
+  createdAt   DateTime       @default(now())
+}
+
+model PlaylistItem {
+  id         String   @id @default(cuid())
+  playlistId String
+  playlist   Playlist @relation(fields: [playlistId], references: [id], onDelete: Cascade)
+  itemId     String
+  item       Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+  position   Int      // Sorting order
+  addedAt    DateTime @default(now())
+}
