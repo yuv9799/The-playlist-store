@@ -15,7 +15,7 @@ const getPrismaClient = () => {
   if (isPostgres) {
     const poolConfig = parse(url);
     poolConfig.ssl = url.includes("localhost") ? false : { rejectUnauthorized: false };
-    const pool = new pg.Pool(poolConfig);
+    const pool = new pg.Pool(poolConfig as any);
     adapter = new PrismaPg(pool);
   } else {
     adapter = new PrismaBetterSqlite3({ url });
