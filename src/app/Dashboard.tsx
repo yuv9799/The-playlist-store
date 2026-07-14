@@ -53,6 +53,7 @@ interface DashboardProps {
 export default function Dashboard({ initialPlaylists, currentUser }: DashboardProps) {
   const [playlists, setPlaylists] = useState<Playlist[]>(initialPlaylists);
   const [activePlaylistId, setActivePlaylistId] = useState<string | null>(null); // null means "All Content"
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   // Modals state
@@ -424,25 +425,50 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
   return (
     <div className="flex flex-1 h-screen overflow-hidden bg-slate-950 text-slate-100 font-sans">
 
+      {/* Sidebar Backdrop (Mobile only) */}
+      {isSidebarOpen && (
+        <div
+          onClick={() => setIsSidebarOpen(false)}
+          className="fixed inset-0 z-30 bg-slate-950/60 backdrop-blur-sm md:hidden transition-opacity duration-300"
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-72 bg-slate-900/90 border-r border-slate-800 flex flex-col justify-between backdrop-blur-xl">
+      <aside className={`
+        fixed inset-y-0 left-0 z-40 w-72 bg-slate-900 border-r border-slate-800 flex flex-col justify-between backdrop-blur-xl transition-transform duration-300 ease-in-out
+        md:relative md:translate-x-0 md:flex md:z-0
+        ${isSidebarOpen ? "translate-x-0" : "-translate-x-full"}
+      `}>
         <div className="p-6 flex flex-col gap-6 overflow-y-auto">
           {/* Logo */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-              <svg className="w-5.5 h-5.5 text-white stroke-current fill-none" strokeWidth="2.5" viewBox="0 0 24 24">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-purple-600 to-pink-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+                <svg className="w-5.5 h-5.5 text-white stroke-current fill-none" strokeWidth="2.5" viewBox="0 0 24 24">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
+                  Homepage
+                </h1>
+                <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">
+                  Content Hub
+                </p>
+              </div>
+            </div>
+            {/* Close button for mobile */}
+            <button
+              onClick={() => setIsSidebarOpen(false)}
+              className="p-1.5 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white md:hidden cursor-pointer"
+              aria-label="Close sidebar"
+            >
+              <svg className="w-5 h-5 stroke-current fill-none" strokeWidth="2.5" viewBox="0 0 24 24">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
-            </div>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-white via-slate-200 to-slate-400">
-                Homepage
-              </h1>
-              <p className="text-[10px] text-slate-400 font-mono tracking-widest uppercase">
-                Content Hub
-              </p>
-            </div>
+            </button>
           </div>
 
           {/* Quick Action Button */}
@@ -477,7 +503,10 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
               <div className="flex flex-col gap-1">
                 {/* All Content Tab */}
                 <button
-                  onClick={() => setActivePlaylistId(null)}
+                  onClick={() => {
+                    setActivePlaylistId(null);
+                    setIsSidebarOpen(false);
+                  }}
                   className={`flex items-center justify-between px-3 py-2.5 rounded-lg text-sm font-medium transition-all cursor-pointer ${activePlaylistId === null
                     ? "bg-indigo-600/15 text-indigo-400 border-l-2 border-indigo-500 pl-2.5"
                     : "text-slate-300 hover:bg-slate-800/60 hover:text-white"
@@ -510,7 +539,10 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
                       }`}
                   >
                     <button
-                      onClick={() => setActivePlaylistId(pl.id)}
+                      onClick={() => {
+                        setActivePlaylistId(pl.id);
+                        setIsSidebarOpen(false);
+                      }}
                       className="flex-1 text-left px-3 py-2.5 text-sm font-medium truncate cursor-pointer"
                     >
                       {pl.name}
@@ -539,6 +571,59 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
           </nav>
         </div>
 
+        {/* YouTube Sync Panel */}
+        <div className="mx-6 mb-4 p-4 rounded-xl bg-slate-950/50 border border-slate-800 flex flex-col gap-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-xs font-semibold text-slate-300">
+              <svg className="w-4 h-4 text-red-500 fill-current" viewBox="0 0 24 24">
+                <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.508 9.388.508 9.388.508s7.517 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+              <span>YouTube Sync</span>
+            </div>
+            <span className={`w-2 h-2 rounded-full ${isYouTubeConnected ? "bg-emerald-500" : "bg-slate-600"}`}></span>
+          </div>
+
+          {isYouTubeConnected ? (
+            <div className="flex flex-col gap-2">
+              <button
+                onClick={handleSyncYouTube}
+                disabled={isSyncingYouTube}
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-red-600 hover:bg-red-500 disabled:bg-red-700 text-white font-medium text-xs transition duration-200 shadow-md shadow-red-600/10 cursor-pointer disabled:cursor-not-allowed"
+              >
+                {isSyncingYouTube ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Syncing...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-3.5 h-3.5 stroke-current fill-none" strokeWidth="2.5" viewBox="0 0 24 24">
+                      <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+                    </svg>
+                    <span>Sync Playlists</span>
+                  </>
+                )}
+              </button>
+              <button
+                onClick={handleDisconnectYouTube}
+                className="text-[10px] text-slate-500 hover:text-red-400 self-center transition cursor-pointer"
+              >
+                Disconnect Account
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleLinkYouTube}
+              className="w-full flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-slate-800 hover:bg-slate-750 text-slate-200 hover:text-white font-medium text-xs border border-slate-700 transition duration-200 cursor-pointer"
+            >
+              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
+                <path d="M23.498 6.163a3.003 3.003 0 0 0-2.11-2.11C19.517 3.545 12 3.545 12 3.545s-7.517 0-9.388.508a3.003 3.003 0 0 0-2.11 2.11C0 8.033 0 12 0 12s0 3.967.502 5.837a3.003 3.003 0 0 0 2.11 2.11c1.871.508 9.388.508 9.388.508s7.517 0 9.388-.508a3.003 3.003 0 0 0 2.11-2.11C24 15.967 24 12 24 12s0-3.967-.502-5.837zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
+              </svg>
+              <span>Connect Channel</span>
+            </button>
+          )}
+        </div>
+
         {/* User profile footer */}
         <div className="p-4 border-t border-slate-800 flex items-center justify-between gap-3 bg-slate-950/40">
           <div className="flex items-center gap-3 overflow-hidden">
@@ -557,17 +642,32 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
       {/* Main Content Area */}
       <main className="flex-1 flex flex-col overflow-hidden bg-slate-950">
         {/* Header bar */}
-        <header className="h-18 border-b border-slate-800 px-8 flex items-center justify-between bg-slate-900/35 backdrop-blur-md">
-          <div className="flex flex-col">
-            <h2 className="text-lg font-semibold text-slate-100">
-              {activePlaylist ? activePlaylist.name : "All Saved Content"}
-            </h2>
-            <p className="text-xs text-slate-400">
-              {activePlaylist?.description || "Showing merged saved items from all playlists"}
-            </p>
+        <header className="h-18 md:h-20 border-b border-slate-800 px-4 md:px-8 flex items-center justify-between bg-slate-900/35 backdrop-blur-md">
+          <div className="flex items-center gap-3">
+            {/* Hamburger button (visible on mobile only) */}
+            <button
+              onClick={() => setIsSidebarOpen(true)}
+              className="p-2 -ml-2 rounded-lg text-slate-400 hover:bg-slate-800 hover:text-white md:hidden cursor-pointer"
+              aria-label="Open sidebar"
+            >
+              <svg className="w-6 h-6 stroke-current fill-none" strokeWidth="2" viewBox="0 0 24 24">
+                <line x1="4" y1="6" x2="20" y2="6"></line>
+                <line x1="4" y1="12" x2="20" y2="12"></line>
+                <line x1="4" y1="18" x2="20" y2="18"></line>
+              </svg>
+            </button>
+
+            <div className="flex flex-col">
+              <h2 className="text-base md:text-lg font-semibold text-slate-100 truncate max-w-[150px] sm:max-w-xs md:max-w-none">
+                {activePlaylist ? activePlaylist.name : "All Saved Content"}
+              </h2>
+              <p className="text-xs text-slate-400 hidden sm:block truncate max-w-xs md:max-w-lg">
+                {activePlaylist?.description || "Showing merged saved items from all playlists"}
+              </p>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             {/* Search */}
             <div className="relative">
               <svg className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 fill-none stroke-current" strokeWidth="2" viewBox="0 0 24 24">
@@ -576,17 +676,29 @@ export default function Dashboard({ initialPlaylists, currentUser }: DashboardPr
               </svg>
               <input
                 type="text"
-                placeholder="Search across library..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 bg-slate-850 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 focus:outline-none rounded-xl pl-9.5 pr-4 py-2 text-sm text-slate-200 placeholder-slate-400 transition-all duration-200 focus:w-80"
+                className="w-32 sm:w-48 md:w-64 bg-slate-850 border border-slate-700 hover:border-slate-600 focus:border-indigo-500 focus:outline-none rounded-xl pl-9.5 pr-3 py-1.5 md:py-2 text-sm text-slate-200 placeholder-slate-400 transition-all duration-200 focus:w-40 sm:focus:w-64 md:focus:w-80"
               />
             </div>
+
+            {/* Quick Action Button for Mobile */}
+            <button
+              onClick={() => setIsAddLinkOpen(true)}
+              className="flex items-center justify-center p-2 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-md shadow-indigo-650/20 md:hidden cursor-pointer"
+              title="Save Content Link"
+            >
+              <svg className="w-5 h-5 stroke-current fill-none" strokeWidth="2.5" viewBox="0 0 24 24">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+              </svg>
+            </button>
           </div>
         </header>
 
         {/* Content body */}
-        <div className="flex-1 overflow-y-auto p-8">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8">
 
           {/* Notifications */}
           {errorMessage && (
